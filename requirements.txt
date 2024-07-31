@@ -2,5 +2,5 @@ mechanize
 requests
 user_agent
 pyrogram
-BeautifulSoup
+beautifulsoup4
 pyromod
