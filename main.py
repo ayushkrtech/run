@@ -5,7 +5,7 @@ from pyrogram.types import Message
 import os
 
 # Telegram bot token (replace with your bot token)
-BOT_TOKEN = "6685119417:AAGGYkc1ztEbtILrx3VmY4i8_HgzwhqdRAI"
+BOT_TOKEN = "6685119417:AAHoXsgzdRpSWHFpkQpGLGEg5Up-zQE8x0E"
 api_id = 6590520
 api_hash = "7f31db7e8cd1c0959c187e2651935c00"
 # Initialize Pyrogram client
