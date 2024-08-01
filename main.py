@@ -16,17 +16,17 @@ def hma_login(email, password):
     try:
     	url = "https://res.windscribe.com/res/logintoken"
     	headers = {
-       "origin": "https://windscribe.com",
-       "priority": "u=1, i",
-       "referer": "https://windscribe.com/",
-       "sec-ch-ua": 'Not)A;Brand";v="99", "Brave";v="127", "Chromium";v="127"',
-       "sec-ch-ua-mobile": "?0", 
-       "sec-ch-ua-platform": "Windows",
-       "sec-fetch-dest": "empty",
-       "sec-fetch-mode": "cors", 
-       "sec-fetch-site": "same-site",
-       "sec-gpc": "1", 
-       "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36" 
+           "origin": "https://windscribe.com",
+           "priority": "u=1, i",
+           "referer": "https://windscribe.com/",
+           "sec-ch-ua": 'Not)A;Brand";v="99", "Brave";v="127", "Chromium";v="127"',
+           "sec-ch-ua-mobile": "?0", 
+           "sec-ch-ua-platform": "Windows",
+           "sec-fetch-dest": "empty",
+           "sec-fetch-mode": "cors", 
+           "sec-fetch-site": "same-site",
+           "sec-gpc": "1", 
+           "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36" 
         }
     	res_post = requests.post(url,headers=headers)
     	csrf_token = res_post.text.split('csrf_token":"')[1].split('"')[0]
