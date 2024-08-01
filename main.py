@@ -13,22 +13,26 @@ app = Client("hma_bot", api_id=api_id, api_hash=api_hash, bot_token=BOT_TOKEN)
 
 def hma_login(email, password):
     try:
-        url = "https://android-api-cf.duolingo.com/2017-06-30/login?fields=id"
-        headers = {
-            "host": "android-api-cf.duolingo.com",
-            "user-agent": "Duodroid/5.159.4 Dalvik/2.1.0 (Linux; U; Android 15; Redmi Note 15 Pro MIUI/V12.5.2.0.QFHINXM)",
-            "accept": "application/json",
-            "x-amzn-trace-id": "User=0",
-            "content-type": "application/json",
-            "accept-encoding": "gzip"
+    	url = "https://res.windscribe.com/res/logintoken"
+    	headers = {
+       "origin": "https://windscribe.com",
+       "priority": "u=1, i",
+       "referer": "https://windscribe.com/",
+       "sec-ch-ua": 'Not)A;Brand";v="99", "Brave";v="127", "Chromium";v="127"',
+       "sec-ch-ua-mobile": "?0", 
+       "sec-ch-ua-platform": "Windows",
+       "sec-fetch-dest": "empty",
+       "sec-fetch-mode": "cors", 
+       "sec-fetch-site": "same-site",
+       "sec-gpc": "1", 
+       "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36" 
         }
-        payload = {
-            "distinctId": "null",
-            "identifier": email,
-            "password": password
-        }
-        response = requests.post(url, json=payload, headers=headers)
-        if "id" in response.text:
+    	res_post = requests.post(url,headers=headers)
+    	csrf_token = res_post.text.split('csrf_token":"')[1].split('"')[0]
+    	csrf_time = res_post.text.split('csrf_time":')[1].split('}')[0]
+    	data = {"login":1,"upgrade":0,"csrf_time":csrf_time,"csrf_token":csrf_token,"username":user,"password":pasw,"code":""}
+    	res_login = requests.post("https://windscribe.com/login",data=data,headers=headers)
+        if "Account Overview" in res_login.text or "Account Status" in res_login.text:
             return True, "Login successful."
         else:
             return False, "Invalid credentials."
