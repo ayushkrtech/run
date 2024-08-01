@@ -1,6 +1,7 @@
 from pyrogram import Client, filters
 import requests
 import os
+import pyromod
 from pyrogram.types import Message
 
 # Telegram bot token (replace with your bot token)
