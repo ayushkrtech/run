@@ -1,10 +1,10 @@
-from pyrogram import Client, filters
+import os
 import yt_dlp
 import pyromod
+from pyrogram import Client, filters
 from pyrogram.types import Message
-import os
 
-BOT_TOKEN = "6417384180:AAET1sC3LMkRUSwaYjXrWe1vu6u6EY4Ls5Y"
+BOT_TOKEN = "6685119417:AAGGYkc1ztEbtILrx3VmY4i8_HgzwhqdRAI"
 api_id = 6590520
 api_hash = "7f31db7e8cd1c0959c187e2651935c00"
 app = Client("hma_bot", api_id=api_id, api_hash=api_hash, bot_token=BOT_TOKEN)
@@ -44,10 +44,12 @@ async def request_url(client, m: Message):
     
     # Set up yt-dlp options
     ydl_opts = {
-        'outtmpl': os.path.join(path, '%(title)s.%(ext)s'),
-        'format': format_option,
-        'noplaylist': True
+    'outtmpl': os.path.join(path, '%(title)s.%(ext)s'),
+    'format': format_option,
+    'noplaylist': True,
+    'progress_hooks': [lambda d: print(d)]
     }
+
     
     # Download the video
     await editable.edit("**Starting Downloading Video...**")
@@ -56,6 +58,10 @@ async def request_url(client, m: Message):
             info_dict = ydl.extract_info(url, download=True)
             video_title = info_dict.get('title', 'video')
             video_file = os.path.join(path, f"{video_title}.mp4")
+        
+        # Debug: Print paths
+        print(f"Expected file path: {video_file}")
+        print(f"File exists: {os.path.isfile(video_file)}")
         
         # Check if the file exists
         if not os.path.isfile(video_file):
