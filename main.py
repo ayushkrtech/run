@@ -4,7 +4,7 @@ import pyromod
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
-BOT_TOKEN = "6685119417:AAGGYkc1ztEbtILrx3VmY4i8_HgzwhqdRAI"
+BOT_TOKEN = "6417384180:AAET1sC3LMkRUSwaYjXrWe1vu6u6EY4Ls5Y"
 api_id = 6590520
 api_hash = "7f31db7e8cd1c0959c187e2651935c00"
 app = Client("hma_bot", api_id=api_id, api_hash=api_hash, bot_token=BOT_TOKEN)
