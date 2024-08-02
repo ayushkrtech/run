@@ -1,6 +1,5 @@
 from pyrogram import Client, filters
 import yt_dlp
-import pyromod
 from pyrogram.types import Message
 import os
 
@@ -54,11 +53,20 @@ async def request_url(client, m: Message):
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
-            video_file = os.path.join(path, f"{info_dict['title']}.mp4")
+            video_title = info_dict.get('title', 'video')
+            video_file = os.path.join(path, f"{video_title}.mp4")
+        
+        # Check if the file exists
+        if not os.path.isfile(video_file):
+            await editable.edit("**Failed to download the video. The file does not exist.**")
+            return
+        
+        # Customize the caption
+        caption = f"Here is your video: *{video_title}*\nQuality: *{quality}*"
         
         # Send the downloaded video to the user
         await editable.edit("**Uploading Video...**")
-        await client.send_video(chat_id=m.chat.id, video=video_file, caption="Here is your video!")
+        await client.send_video(chat_id=m.chat.id, video=video_file, caption=caption, parse_mode='markdown')
         
     except Exception as e:
         await editable.edit(f"**Error: {str(e)}**")
